@@ -1,37 +1,88 @@
-# The Traveler's Currency
+# The Traveler's Currency Premium v2.0.0
 
-Telegram-бот на Python и `pytelegrambotapi`: миникошелёк путешественника с локальным SQLite-хранилищем и курсами через реальный API `api.exchangerate.host`.
+Профессиональная версия Telegram-бота «Валюта мира»: личный кошелёк
+путешественника, быстрый конвертер, категории расходов и аналитика бюджета.
 
-## Настройка
+Публичное название бота — **AtlasPulse**.
 
-1. Установите зависимости:
+## Возможности Premium
 
-```bash
+- премиальное главное меню без перегруженных slash-команд;
+- несколько путешествий с быстрым переключением;
+- кошелёк с остатком в домашней и местной валюте;
+- прогресс расходования бюджета;
+- независимый конвертер валют по стране или ISO-коду;
+- расходы с шестью категориями и комментарием;
+- аналитика по категориям и последние операции;
+- отмена последнего расхода;
+- обновление онлайн-курса и поддержка собственного курса;
+- экспорт истории в CSV с UTF-8 для Excel;
+- автоматическая миграция старой SQLite-базы без потери поездок;
+- HTTPS для запросов к валютному API;
+- секреты в `.env`, резервное копирование и systemd-запуск 24/7.
+
+## Интерфейс AtlasPulse
+
+![Кошелёк и конвертер AtlasPulse](docs/images/atlaspulse-wallet-and-converter.png)
+
+![Путешествия и аналитика AtlasPulse](docs/images/atlaspulse-trips-and-analytics.png)
+
+## Локальный запуск в Windows
+
+Откройте PowerShell в папке проекта:
+
+```powershell
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-2. Откройте `config.py` и заполните две переменные:
-
-```python
-EXCHANGE_RATE_ACCESS_KEY = "ваш_access_key_exchangerate_host"
-TELEGRAM_BOT_TOKEN = "ваш_telegram_token"
-```
-
-3. Запустите бота:
-
-```bash
+Copy-Item .env.example .env
+notepad .env
 python bot.py
 ```
 
-## Что умеет бот
+Заполните в `.env` значения `TELEGRAM_BOT_TOKEN` и
+`EXCHANGE_RATE_ACCESS_KEY`. Существующий файл `traveler_wallet.sqlite3`
+можно положить рядом с `bot.py`; при первом запуске он будет обновлён
+автоматически.
 
-- Создаёт несколько путешествий для каждого пользователя.
-- Хранит валютную пару, курс и баланс в двух валютах.
-- Конвертирует начальную сумму через `http://api.exchangerate.host/convert`.
-- Позволяет принять API-курс или вручную ввести курс местного обменника.
-- Любое число в активном путешествии считает расходом в валюте назначения.
-- Показывает inline-меню без обязательных slash-команд.
-- Поддерживает `/newtrip`, `/switch`, `/balance`, `/history`, `/setrate`.
+## Проверка
 
-Все запросы к валютному API идут только через `current_api.py` и только на endpoint `/convert`.
+```powershell
+python -m unittest discover -s tests -v
+python -m compileall -q .
+```
+
+## Обновление сервера
+
+Скопируйте папку проекта на сервер, например в `/root/premium-update`, затем:
+
+```bash
+chmod +x /root/premium-update/deploy/update.sh
+bash /root/premium-update/deploy/update.sh /root/currency_bot currency-bot.service
+```
+
+Скрипт перед изменениями создаёт резервную копию в
+`/root/currency-bot-backups/<дата>`, сохраняет SQLite-базу, переносит значения
+из старого `config.py` в закрытый `.env`, устанавливает зависимости и
+перезапускает `currency-bot.service`.
+
+Проверка после установки:
+
+```bash
+systemctl is-active currency-bot.service
+journalctl -u currency-bot.service -n 80 --no-pager
+```
+
+## Структура
+
+- `bot.py` — сценарии Telegram и пользовательские состояния;
+- `database.py` — SQLite, миграции, статистика и отмена расходов;
+- `current_api.py` — безопасный клиент валютного API;
+- `country_currency.py` — страны, территории и валюты ISO/CLDR;
+- `keyboards.py` — премиальное меню и inline-кнопки;
+- `formatters.py` — суммы, курсы и индикатор бюджета;
+- `exporter.py` — выгрузка истории в CSV;
+- `deploy/` — systemd unit и установщик обновления;
+- `tests/` — проверки миграции, учёта расходов и справочника валют.
 

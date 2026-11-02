@@ -1,0 +1,20 @@
+[Unit]
+Description=The Traveler's Currency Premium Telegram Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/currency_bot
+EnvironmentFile=/root/currency_bot/.env
+ExecStart=/root/currency_bot/.venv/bin/python /root/currency_bot/bot.py
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
